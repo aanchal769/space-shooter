@@ -1,4 +1,5 @@
 import pygame
+import random
 
 pygame.init()
 
@@ -14,6 +15,11 @@ player_height=100
 
 bullet_width=15
 bullet_height=40
+
+enemy_width=80
+enemy_height=80
+
+
 screen=pygame.display.set_mode((screen_width,screen_height))
 player=pygame.image.load("assets/images/player.png")
 player=pygame.transform.scale(player,(player_width,player_height))
@@ -26,7 +32,11 @@ bullet=pygame.image.load("assets/images/bullet.png")
 bullet=pygame.transform.scale(bullet,(bullet_width,bullet_height))
 
 
+enemy=pygame.image.load("assets/images/enemy.png")
+enemy=pygame.transform.scale(enemy,(enemy_width,enemy_height))
 
+enemy_x=450
+enemy_y=50
 
 player_x=700
 player_y=650
@@ -35,6 +45,7 @@ bullet_speed=15
 bullet_x=player_x+ (player_width//2)-(bullet_width//2)
 bullet_y=player_y+(player_height//2)-(bullet_height//2)
 
+enemy_speed=5
 bullet_state="ready"
 clock=pygame.time.Clock()
 
@@ -54,6 +65,8 @@ while running:
                                 bullet_state="fire"
                                 bullet_x=player_x+ (player_width//2)-(bullet_width//2)
                                 bullet_y=player_y+(player_height//2)-(bullet_height//2)
+
+
 
     if bullet_state=="fire":
                 bullet_y-=bullet_speed
@@ -90,10 +103,19 @@ while running:
     
 
     
-    
+    enemy_y+=enemy_speed
+
+    if enemy_y> screen_height:
+            enemy_y=0
+
+            enemy_x=random.randint(0,screen_width-enemy_width)
+
+            
     screen.fill((10,25,60))
     screen.blit(player,(player_x,player_y))
     screen.blit(bullet,(bullet_x,bullet_y))
+    screen.blit(enemy,(enemy_x,enemy_y))
+
 
     
     
