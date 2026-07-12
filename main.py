@@ -46,6 +46,19 @@ bullet_speed=15
 bullet_x=player_x+ (player_width//2)-(bullet_width//2)
 bullet_y=player_y+(player_height//2)-(bullet_height//2)
 
+
+num_of_enemies=5
+
+e_x=[]
+e_y=[]
+
+
+for i in range(num_of_enemies):
+        enemy_x=random.randint(0,screen_width-enemy_width)
+        enemy_y=0
+
+        e_x.append(enemy_x)
+        e_y.append(enemy_y)
 enemy_speed=5
 bullet_state="ready"
 
@@ -75,7 +88,6 @@ def is_collision(enemy_x,enemy_y,bullet_x,bullet_y):
         
         distance=math.sqrt((enemy_x-bullet_x)**2+(enemy_y-bullet_y)**2)
        
-       
         if distance<55:
                 
                 return True
@@ -93,14 +105,15 @@ def move_bullet():
 
 
 def move_enemy():
-        global enemy_y,enemy_x
 
-        enemy_y+=enemy_speed
+        for i in range(num_of_enemies):
+                e_y[i]+=enemy_speed
 
-        if enemy_y>screen_height:
-                enemy_y=0
+                if e_y[i]>screen_height:
+                        e_y[i]=0
 
-                enemy_x=random.randint(0,screen_width-enemy_width)
+                        e_x[i]=random.randint(0,screen_width-enemy_width)
+        
     
 
 
@@ -113,11 +126,13 @@ def show_score(score):
 
 def draw_game():
         screen.blit(player,(player_x,player_y))
-    
-        screen.blit(enemy,(enemy_x,enemy_y))
+        for i in range(num_of_enemies):
+           screen.blit(enemy,(e_x[i],e_y[i]))
 
         if bullet_state=="fire":
             screen.blit(bullet,(bullet_x,bullet_y))
+
+
 
 score=0
 clock=pygame.time.Clock()
@@ -171,18 +186,16 @@ while running:
     move_enemy()
     
    
-
-    if is_collision(enemy_x,enemy_y,bullet_x,bullet_y) :
-            print("Collision!")
-
+    for i in range(num_of_enemies):
+            
+        if is_collision(e_x[i],e_y[i],bullet_x,bullet_y) :
+            
             score+=1
             print(score)
-            bullet_state="ready"
+            reset_bullet()
+            e_y[i]=0
+            e_x[i]=random.randint(0,screen_width-enemy_width)
             
-            bullet_y=player_y+(player_height//2)-(bullet_height//2)
-            bullet_x=player_x+ (player_width//2)-(bullet_width//2)
-            enemy_y=0
-            enemy_x=random.randint(0,screen_width-enemy_width)
             
     show_score(score)
     
