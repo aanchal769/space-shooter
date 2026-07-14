@@ -45,10 +45,10 @@ player_speed=20
 bullet_speed=15
 bullet_x=player_x+ (player_width//2)-(bullet_width//2)
 bullet_y=player_y+(player_height//2)-(bullet_height//2)
-
+game_over=False
 
 num_of_enemies=5
-
+enemy_alive=[]
 e_x=[]
 e_y=[]
 
@@ -59,8 +59,21 @@ for i in range(num_of_enemies):
 
         e_x.append(enemy_x)
         e_y.append(enemy_y)
+
+        enemy_alive.append(True)
+
+
 enemy_speed=5
 bullet_state="ready"
+
+def is_pecollision(enemy_x,enemy_y,player_x,player_y,x):
+
+        distance=math.sqrt((enemy_x-player_x)**2 + (enemy_y-player_y)**2)
+
+        if distance < x:
+                return True
+        
+        return False
 
 
 def reset_bullet():
@@ -107,14 +120,16 @@ def move_bullet():
 def move_enemy():
 
         for i in range(num_of_enemies):
-                e_y[i]+=enemy_speed
 
-                if e_y[i]>screen_height:
+                if enemy_alive[i]:
+                   e_y[i]+=enemy_speed
+
+                   if e_y[i]>screen_height:
                         e_y[i]=0
 
                         e_x[i]=random.randint(0,screen_width-enemy_width)
         
-    
+                        
 
 
 def show_score(score):
@@ -127,12 +142,28 @@ def show_score(score):
 def draw_game():
         screen.blit(player,(player_x,player_y))
         for i in range(num_of_enemies):
-           screen.blit(enemy,(e_x[i],e_y[i]))
+           if enemy_alive[i]:
+              screen.blit(enemy,(e_x[i],e_y[i]))
 
         if bullet_state=="fire":
             screen.blit(bullet,(bullet_x,bullet_y))
+        
+
+        
+
+def check_game_over():
+        global game_over
+
+        for i in range(num_of_enemies):
+                if is_pecollision(e_x[i],e_y[i],player_x,player_y,70):
+                        game_over=True
+                        break
 
 
+def show_game_over():
+        game_over_text=font.render("GAME OVER",True,(255,0,0))
+
+        screen.blit(game_over_text,(250,350))     
 
 score=0
 clock=pygame.time.Clock()
@@ -153,56 +184,63 @@ while running:
                        fire_bullet()
 
 
-
-    move_bullet()
+    if not game_over:
+        move_bullet()
         
-    keys = pygame.key.get_pressed()
-
-    if keys[pygame.K_RIGHT]:
+        keys = pygame.key.get_pressed()
+                   
+        if keys[pygame.K_RIGHT]:
                player_x += player_speed
 
-    if keys[pygame.K_LEFT]:
+        if keys[pygame.K_LEFT]:
                player_x -= player_speed
 
-    if keys[pygame.K_UP]:
+        if keys[pygame.K_UP]:
                player_y -= player_speed
 
-    if keys[pygame.K_DOWN]:
+        if keys[pygame.K_DOWN]:
                 player_y += player_speed
-    if player_x<0:
+        if player_x<0:
                 player_x=0
 
-    if player_y<0:
+        if player_y<0:
                 player_y=0
 
-    if player_x > screen_width-player_width:
+        if player_x > screen_width-player_width:
                 player_x=screen_width-player_width
 
-    if player_y > screen_height-player_height:
+        if player_y > screen_height-player_height:
                 player_y=screen_height-player_height
     
 
     
-    move_enemy()
+        move_enemy()
     
    
-    for i in range(num_of_enemies):
+        for i in range(num_of_enemies):
             
-        if is_collision(e_x[i],e_y[i],bullet_x,bullet_y) :
+           if enemy_alive[i]  and is_collision(e_x[i],e_y[i],bullet_x,bullet_y) :
             
-            score+=1
-            print(score)
-            reset_bullet()
-            e_y[i]=0
-            e_x[i]=random.randint(0,screen_width-enemy_width)
-            
-            
+               score+=1
+               print(score)
+               reset_bullet()
+               enemy_alive[i]=False
+               e_y[i]=0
+               e_x[i]=random.randint(0,screen_width-enemy_width)
+               
+               break
+           
+
+        check_game_over()
     show_score(score)
     
     draw_game()
-    
-   
 
+    
+
+
+    if game_over:
+            show_game_over() 
     
     clock.tick(30)
     pygame.display.update()
