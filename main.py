@@ -20,6 +20,9 @@ bullet_height=40
 enemy_width=80
 enemy_height=80
 
+enemybullet_width=15
+enemybullet_height=40
+
 
 screen=pygame.display.set_mode((screen_width,screen_height))
 player=pygame.image.load("assets/images/player.png")
@@ -36,18 +39,30 @@ bullet=pygame.transform.scale(bullet,(bullet_width,bullet_height))
 enemy=pygame.image.load("assets/images/enemy.png")
 enemy=pygame.transform.scale(enemy,(enemy_width,enemy_height))
 
+
+enemybullet=pygame.image.load("assets/images/enemybullet.png")
+enemybullet=pygame.transform.scale(enemybullet,(enemybullet_width,enemybullet_height))
 enemy_x=450
 enemy_y=50
 
 player_x=700
 player_y=650
 player_speed=20
-bullet_speed=15
+bullet_speed=10
 bullet_x=player_x+ (player_width//2)-(bullet_width//2)
 bullet_y=player_y+(player_height//2)-(bullet_height//2)
+
+
+
+
+enemybullet_x=[]
+enemybullet_y=[]
+enemybullet_speed=8
+enemybullet_state=[]
+
 game_over=False
 
-num_of_enemies=5
+num_of_enemies=3
 enemy_alive=[]
 e_x=[]
 e_y=[]
@@ -61,10 +76,26 @@ for i in range(num_of_enemies):
         e_y.append(enemy_y)
 
         enemy_alive.append(True)
+        enemybullet_x.append(0)
+        enemybullet_y.append(0)
+        enemybullet_state.append("ready")
 
 
-enemy_speed=5
+enemy_speed=2
 bullet_state="ready"
+def ispebcollison(enemybullet_x,enemybullet_y,player_x,player_y):
+       distance=math.sqrt((player_x-enemybullet_x)**2+(player_y-enemybullet_y)**2)
+       if distance<40:
+              return True
+       
+       return False
+
+def is_ebcollision(enemybullet_x,enemybullet_y,bullet_x,bullet_y):
+       distance=math.sqrt((bullet_x-enemybullet_x)**2+(bullet_y-enemybullet_y)**2)
+       if distance<20:
+              return True
+       
+       return False
 
 def is_pecollision(enemy_x,enemy_y,player_x,player_y,x):
 
@@ -128,10 +159,55 @@ def move_enemy():
                         e_y[i]=0
 
                         e_x[i]=random.randint(0,screen_width-enemy_width)
-        
+
+def fire_enemy_bullet():
+      
+             for i in range(num_of_enemies):
+                if enemybullet_state[i]=="ready"  and  enemy_alive[i]:
+                   
+                      enemybullet_x[i]=e_x[i]+(enemy_width//2)-(enemybullet_width//2)
+                      enemybullet_y[i]=e_y[i]+(enemy_height)
+
+                      enemybullet_state[i]="fire"
+
+
+def move_enemy_bullet():
+       
+             for i in range (num_of_enemies):
+                if enemybullet_state[i]=="fire"   and enemy_alive[i]:
+                    enemybullet_y[i]+=enemybullet_speed
+                     
+
+                    if enemybullet_y[i]>screen_height:
+                       enemybullet_state[i]="ready"
+                       
                         
+def draw_enemy_bullet():
+       for i in range(num_of_enemies):
+              if(enemy_alive[i] and enemybullet_state[i]=="fire"):
+                     screen.blit(enemybullet,(enemybullet_x[i],enemybullet_y[i]))
 
 
+def isenemycollisiion():
+       global score,game_over
+       for i in range(num_of_enemies):
+              if enemy_alive[i] and bullet_state=="fire" and enemybullet_state[i]=="fire" :
+                     if is_ebcollision(enemybullet_x[i],enemybullet_y[i],bullet_x,bullet_y):
+                            score+=1
+                            reset_bullet()
+                            enemybullet_state[i]="ready"
+                            enemybullet_x[i]=0
+                            enemybullet_y[i]=0
+                            enemy_alive[i]=False
+                            break
+                            
+
+
+              if enemy_alive[i]  and ispebcollison(enemybullet_x[i],enemybullet_y[i],player_x,player_y):
+                     game_over=True
+                     break
+                     
+                     
 def show_score(score):
         
         score_text=font.render(f"Score: {score}",True,(255,0,0))
@@ -159,7 +235,7 @@ def check_game_over():
                         game_over=True
                         break
 
-
+        
 def show_game_over():
         game_over_text=font.render("GAME OVER",True,(255,0,0))
 
@@ -232,6 +308,10 @@ while running:
            
 
         check_game_over()
+        fire_enemy_bullet()
+        move_enemy_bullet()
+        isenemycollisiion()
+        draw_enemy_bullet()
     show_score(score)
     
     draw_game()
