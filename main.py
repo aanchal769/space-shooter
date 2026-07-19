@@ -11,7 +11,18 @@ screen_height=800
 player_width=100
 player_height=100
 
+explosion_images=[]
 
+for i in range(1,6):
+       image=pygame.image.load(f"assets/images/explosion{i}.png")
+       image=pygame.transform.scale(image,(80,80))
+       explosion_images.append(image)
+
+
+explosion_x=[]
+explosion_y=[]
+explosion_active=[]
+explosion_frame=[]
 
 
 bullet_width=15
@@ -42,6 +53,8 @@ enemy=pygame.transform.scale(enemy,(enemy_width,enemy_height))
 
 enemybullet=pygame.image.load("assets/images/enemybullet.png")
 enemybullet=pygame.transform.scale(enemybullet,(enemybullet_width,enemybullet_height))
+
+
 enemy_x=450
 enemy_y=50
 
@@ -57,11 +70,11 @@ bullet_y=player_y+(player_height//2)-(bullet_height//2)
 
 enemybullet_x=[]
 enemybullet_y=[]
-enemybullet_speed=8
+enemybullet_speed=4
 enemybullet_state=[]
 
 game_over=False
-
+winner=False
 num_of_enemies=3
 enemy_alive=[]
 e_x=[]
@@ -78,7 +91,12 @@ for i in range(num_of_enemies):
         enemy_alive.append(True)
         enemybullet_x.append(0)
         enemybullet_y.append(0)
+        explosion_x.append(0)
+        explosion_y.append(0)
+        explosion_active.append(False)
+        explosion_frame.append(0)
         enemybullet_state.append("ready")
+
 
 
 enemy_speed=2
@@ -194,19 +212,45 @@ def isenemycollisiion():
               if enemy_alive[i] and bullet_state=="fire" and enemybullet_state[i]=="fire" :
                      if is_ebcollision(enemybullet_x[i],enemybullet_y[i],bullet_x,bullet_y):
                             score+=1
+                            explosion_x[i]=enemybullet_x[i]
+                            explosion_y[i]=enemybullet_y[i]
+                            explosion_active[i]=True
+                            explosion_frame[i]=0
+
                             reset_bullet()
                             enemybullet_state[i]="ready"
                             enemybullet_x[i]=0
                             enemybullet_y[i]=0
                             enemy_alive[i]=False
                             break
-                            
 
 
               if enemy_alive[i]  and ispebcollison(enemybullet_x[i],enemybullet_y[i],player_x,player_y):
                      game_over=True
                      break
-                     
+def draw_explosion():
+       for i in range(num_of_enemies):
+              if explosion_active[i]:
+                     screen.blit(explosion_images[explosion_frame[i]],(explosion_x[i],explosion_y[i]))
+                     explosion_frame[i]+=1
+
+                     if explosion_frame[i]==len(explosion_images):
+                            explosion_active[i]=False
+                            explosion_frame[i]=0
+
+
+def check_winner():
+       global winner
+       winner=True
+       
+       for i in range(num_of_enemies):
+              if enemy_alive[i]:
+                     winner=False
+                     break
+
+def show_winner():
+       winner_text=font.render("YOU WIN!",True,(0,255,0))
+       screen.blit(winner_text,(300,350))
                      
 def show_score(score):
         
@@ -234,12 +278,31 @@ def check_game_over():
                 if is_pecollision(e_x[i],e_y[i],player_x,player_y,70):
                         game_over=True
                         break
-
+        
         
 def show_game_over():
         game_over_text=font.render("GAME OVER",True,(255,0,0))
 
-        screen.blit(game_over_text,(250,350))     
+        screen.blit(game_over_text,(250,350))   
+
+
+def restart_game():
+       global score,game_over,winner,player_x,player_y
+       score=0
+       game_over=False
+       winner=False
+       player_x=  700
+       player_y=650
+       for i in range(num_of_enemies):
+              e_x[i]=random.randint(0,screen_width-enemy_width)
+              e_y[i]=0
+              enemy_alive[i]=True
+              reset_bullet()
+              enemybullet_state[i]="ready"
+              enemybullet_x[i]=0
+              enemybullet_y[i]=0
+
+
 
 score=0
 clock=pygame.time.Clock()
@@ -258,7 +321,11 @@ while running:
         if event.type==pygame.KEYDOWN:
                 if event.key==pygame.K_SPACE:
                        fire_bullet()
-
+        
+                
+                if event.key==pygame.K_r:
+                       if game_over or winner:
+                              restart_game()
 
     if not game_over:
         move_bullet()
@@ -306,21 +373,27 @@ while running:
                
                break
            
-
+        
         check_game_over()
+        check_winner()
         fire_enemy_bullet()
         move_enemy_bullet()
         isenemycollisiion()
         draw_enemy_bullet()
+        draw_explosion()
     show_score(score)
     
     draw_game()
 
     
-
+    
 
     if game_over:
             show_game_over() 
+
+
+    if winner:
+               show_winner()
     
     clock.tick(30)
     pygame.display.update()
